@@ -1,0 +1,441 @@
+```bash
+spotify-clone/
+├─ package.json
+├─ tailwind.config.js
+├─ postcss.config.js
+├─ src/
+│  ├─ index.css
+│  ├─ index.js
+│  ├─ App.jsx
+│  ├─ store/
+│  │  ├─ index.js
+│  │  ├─ librarySlice.js
+│  │  ├─ playerSlice.js
+│  ├─ components/
+│  │  ├─ Layout.jsx
+│  │  ├─ Sidebar.jsx
+│  │  ├─ PlayerBar.jsx
+│  │  ├─ ArtistCarousel.jsx
+│  ├─ pages/
+│  │  ├─ Home.jsx
+│  │  ├─ LikedSongsView.jsx
+│  │  ├─ PlaylistView.jsx
+│  │  ├─ ArtistView.jsx
+└─ public/
+   ├─ index.html
+```
+
+**package.json**
+```json
+{
+  "name": "spotify-clone",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.9.1",
+    "howler": "^2.2.3",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-redux": "^8.0.2",
+    "react-router-dom": "^6.3.0",
+    "tailwindcss": "^3.0.0"
+  },
+  "devDependencies": {
+    "postcss": "^8.4.6",
+    "autoprefixer": "^10.4.2"
+  }
+}
+```
+
+**tailwind.config.js**
+```js
+module.exports = {
+  content: ["./src/**/*.{js,jsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+**postcss.config.js**
+```js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+**public/index.html**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spotify Clone</title>
+</head>
+<body class="bg-black text-white">
+  <div id="root"></div>
+</body>
+</html>
+```
+
+**src/index.css**
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+**src/index.js**
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import { Provider } from 'react-redux';
+import store from './store';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <Provider store={store}>
+    <App />
+  </Provider>
+);
+```
+
+**src/App.jsx**
+```jsx
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import LikedSongsView from './pages/LikedSongsView';
+import PlaylistView from './pages/PlaylistView';
+import ArtistView from './pages/ArtistView';
+
+function App() {
+  return (
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/collection/tracks" element={<LikedSongsView />} />
+          <Route path="/playlist/:id" element={<PlaylistView />} />
+          <Route path="/artist/:id" element={<ArtistView />} />
+        </Routes>
+      </Layout>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+**src/store/index.js**
+```js
+import { configureStore } from '@reduxjs/toolkit';
+import libraryReducer from './librarySlice';
+import playerReducer from './playerSlice';
+
+const store = configureStore({
+  reducer: {
+    library: libraryReducer,
+    player: playerReducer,
+  },
+});
+
+export default store;
+```
+
+**src/store/librarySlice.js**
+```js
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  user: { name: "Talha Salahuddin" },
+  playlists: {
+    byId: {
+      'playlist_1': { id: 'playlist_1', name: 'Liked Songs', tracks: ['track_1'] },
+      'playlist_2': { id: 'playlist_2', name: '70s Rock Drive', tracks: [] }
+    },
+    allIds: ['playlist_1', 'playlist_2']
+  },
+  artists: {
+    byId: {
+      'artist_1': { id: 'artist_1', name: 'Avril Lavigne', image: 'https://via.placeholder.com/200' },
+      'artist_2': { id: 'artist_2', name: 'The Chainsmokers', image: 'https://via.placeholder.com/200' },
+      'artist_3': { id: 'artist_3', name: 'Sia', image: 'https://via.placeholder.com/200' },
+      'artist_4': { id: 'artist_4', name: 'Alan Walker', image: 'https://via.placeholder.com/200' }
+    },
+    allIds: ['artist_1', 'artist_2', 'artist_3', 'artist_4']
+  },
+  tracks: {
+    byId: {
+      'track_1': { id: 'track_1', title: 'Hislerim', artist: 'Serhat Durmus', audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }
+    },
+    allIds: ['track_1']
+  }
+};
+
+const librarySlice = createSlice({
+  name: 'library',
+  initialState,
+  reducers: {}
+});
+
+export default librarySlice.reducer;
+```
+
+**src/store/playerSlice.js**
+```js
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  currentTrackId: 'track_1',
+  isPlaying: false,
+  volume: 0.8
+};
+
+const playerSlice = createSlice({
+  name: 'player',
+  initialState,
+  reducers: {
+    setIsPlaying(state, action) {
+      state.isPlaying = action.payload;
+    },
+    setCurrentTrackId(state, action) {
+      state.currentTrackId = action.payload;
+    }
+  }
+});
+
+export const { setIsPlaying, setCurrentTrackId } = playerSlice.actions;
+export default playerSlice.reducer;
+```
+
+**src/components/Layout.jsx**
+```jsx
+import Sidebar from './Sidebar';
+import PlayerBar from './PlayerBar';
+
+const Layout = ({ children }) => (
+  <div className="flex h-screen bg-black text-white">
+    <Sidebar />
+    <div className="flex-1 flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        {children}
+      </div>
+      <PlayerBar />
+    </div>
+  </div>
+);
+
+export default Layout;
+```
+
+**src/components/Sidebar.jsx**
+```jsx
+import { NavLink } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+const Sidebar = () => {
+  const playlists = useSelector(state => state.library.playlists);
+  return (
+    <div className="w-64 bg-black text-gray-300 p-4">
+      <h1 className="text-white text-xl font-bold mb-4">Your Library</h1>
+      <nav className="flex flex-col space-y-2">
+        <NavLink to="/collection/tracks" className="hover:text-white">Liked Songs</NavLink>
+        {playlists.allIds.map(id => (
+          <NavLink key={id} to={`/playlist/${id}`} className="hover:text-white">
+            {playlists.byId[id].name}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  );
+};
+
+export default Sidebar;
+```
+
+**src/components/PlayerBar.jsx**
+```jsx
+import { useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Howl } from 'howler';
+import { setIsPlaying } from '../store/playerSlice';
+
+const PlayerBar = () => {
+  const dispatch = useDispatch();
+  const { currentTrackId, isPlaying } = useSelector(state => state.player);
+  const track = useSelector(state => state.library.tracks.byId[currentTrackId]);
+  const soundRef = useRef(null);
+
+  useEffect(() => {
+    if (track) {
+      if (soundRef.current) soundRef.current.unload();
+      soundRef.current = new Howl({ src: [track.audioUrl], html5: true });
+      if (isPlaying) soundRef.current.play();
+    }
+  }, [track]);
+
+  useEffect(() => {
+    if (!soundRef.current) return;
+    if (isPlaying) {
+      soundRef.current.play();
+    } else {
+      soundRef.current.pause();
+    }
+  }, [isPlaying]);
+
+  return (
+    <div className="bg-gray-900 p-4 flex items-center justify-between">
+      <div>{track ? track.title : 'No track selected'}</div>
+      <div className="flex items-center space-x-4">
+        <button onClick={() => dispatch(setIsPlaying(false))}>Pause</button>
+        <button onClick={() => dispatch(setIsPlaying(true))}>Play</button>
+      </div>
+    </div>
+  );
+};
+
+export default PlayerBar;
+```
+
+**src/components/ArtistCarousel.jsx**
+```jsx
+import { useSelector } from 'react-redux';
+
+const ArtistCarousel = () => {
+  const artists = useSelector(state =>
+    state.library.artists.allIds.map(id => state.library.artists.byId[id])
+  );
+
+  return (
+    <div className="flex overflow-x-auto space-x-4">
+      {artists.map(artist => (
+        <div key={artist.id} className="min-w-[200px] bg-gray-800 rounded p-4 flex-shrink-0">
+          <img src={artist.image} alt={artist.name} className="w-full h-auto rounded mb-2" />
+          <h3 className="text-white text-sm font-semibold">This Is {artist.name}</h3>
+          <p className="text-gray-400 text-xs">The essential tracks, all in one playlist.</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default ArtistCarousel;
+```
+
+**src/pages/Home.jsx**
+```jsx
+import { useSelector } from 'react-redux';
+import ArtistCarousel from '../components/ArtistCarousel';
+
+const Home = () => {
+  const user = useSelector(state => state.library.user);
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl text-white mb-4">Made For {user.name}</h2>
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-gray-800 p-4 rounded">Daily Mix 1</div>
+        <div className="bg-gray-800 p-4 rounded">Daily Mix 2</div>
+        <div className="bg-gray-800 p-4 rounded">Daily Mix 3</div>
+        <div className="bg-gray-800 p-4 rounded">Daily Mix 4</div>
+      </div>
+      <h2 className="text-2xl text-white mt-8 mb-4">Best of artists</h2>
+      <ArtistCarousel />
+    </div>
+  );
+};
+
+export default Home;
+```
+
+**src/pages/LikedSongsView.jsx**
+```jsx
+import { useSelector } from 'react-redux';
+
+const LikedSongsView = () => {
+  const likedTracks = useSelector(state =>
+    state.library.playlists.byId['playlist_1'].tracks.map(
+      id => state.library.tracks.byId[id]
+    )
+  );
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl text-white font-bold mb-4">Liked Songs</h1>
+      <ul className="space-y-2">
+        {likedTracks.map(track => (
+          <li key={track.id} className="flex items-center space-x-4">
+            <span className="text-white hover:text-green-500 cursor-pointer">▶</span>
+            <span className="text-white">{track.title}</span>
+            <span className="text-gray-400">{track.artist}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default LikedSongsView;
+```
+
+**src/pages/PlaylistView.jsx**
+```jsx
+import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+const PlaylistView = () => {
+  const { id } = useParams();
+  const playlist = useSelector(state => state.library.playlists.byId[id]);
+  const tracks = useSelector(state => playlist.tracks.map(tid => state.library.tracks.byId[tid]));
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-white mb-4">{playlist.name}</h1>
+      <ul className="space-y-2">
+        {tracks.map(track => (
+          <li key={track.id} className="flex items-center space-x-4">
+            <span className="text-white hover:text-green-500 cursor-pointer">▶</span>
+            <span className="text-white">{track.title}</span>
+            <span className="text-gray-400">{track.artist}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default PlaylistView;
+```
+
+**src/pages/ArtistView.jsx**
+```jsx
+import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+const ArtistView = () => {
+  const { id } = useParams();
+  const artist = useSelector(state => state.library.artists.byId[id]);
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-white mb-4">{artist.name}</h1>
+      <img src={artist.image} alt={artist.name} className="w-48 h-auto rounded mb-4" />
+      <p>Artist details here</p>
+    </div>
+  );
+};
+
+export default ArtistView;
+```
